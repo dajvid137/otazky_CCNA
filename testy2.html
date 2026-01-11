@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekonómka - Kompletní Active Recall</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header { margin-bottom: 25px; }
+
+        .category-label {
+            display: inline-block;
+            padding: 6px 14px;
+            background: var(--primary);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px -5px rgba(0,0,0,0.1);
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -5px rgba(0,0,0,0.15); }
+
+        .question { font-size: 1.35rem; font-weight: 700; margin-bottom: 25px; line-height: 1.4; }
+
+        .answer {
+            font-size: 1.1rem;
+            color: #334155;
+            line-height: 1.6;
+            display: none;
+            padding-top: 25px;
+            border-top: 2px solid #f1f5f9;
+            width: 100%;
+            text-align: left;
+        }
+
+        .hint { font-size: 0.85rem; color: var(--secondary); margin-top: 20px; font-style: italic; }
+
+        .controls { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+        button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .btn-prev { background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; }
+        .btn-next { background: var(--primary); color: white; }
+        .btn-random { background: #7c3aed; color: white; }
+
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
+        
+        .progress-container { margin-top: 25px; width: 100%; max-width: 400px; margin-left: auto; margin-right: auto; }
+        .progress-text { font-size: 0.9rem; color: var(--secondary); margin-bottom: 8px; }
+        .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); transition: width 0.3s ease; }
+
+        .instructions { font-size: 0.85rem; color: #94a3b8; margin-top: 40px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <a href="test.html">Uzavrene Otazky Zde</a>
+
+<div class="container">
+    <div class="header">
+        <h1>Kompletní Příprava: Ekonomika</h1>
+        <p>Aktivní vybavování (Active Recall)</p>
+    </div>
+
+    <div id="category" class="category-label">Kategorie</div>
+    
+    <div class="card" onclick="toggleAnswer()">
+        <div id="question" class="question">Načítám...</div>
+        <div id="answer" class="answer">Odpověď se zobrazí zde.</div>
+        <div id="hint" class="hint">Klikni pro zobrazení odpovědi</div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-prev" onclick="prevCard()">← Předchozí</button>
+        <button class="btn-random" onclick="shuffleCards()">Zamíchat vše</button>
+        <button class="btn-next" onclick="nextCard()">Další →</button>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-text">Postup: <span id="current-num">1</span> / <span id="total-num">0</span></div>
+        <div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width: 0%"></div></div>
+    </div>
+
+    <div class="instructions">
+        <strong>Tip:</strong> Nejdříve si odpověď zkus říct nahlas nebo napsat na papír, až pak kartu otoč. <br>
+        Tlačítko "Zamíchat" přehází pořadí, aby ses neučil jen podle pozice.
+    </div>
+</div>
+
+<script>
+    const data = [
+        // ZDROJE FINANCOVÁNÍ
+        { c: "Zdroje financování aktiv", q: "Uveď, zda je ážio rozvahovou položkou vlastních/cizích zdrojů a jak se stane zdrojem financování?", a: "Ážio vzniká v situacích, kdy jsou akcie prodávány za vyšší cenu, než je jejich jmenovitá hodnota. Je rozvahovou položkou vlastních zdrojů." },
+        { c: "Zdroje financování aktiv", q: "Uveď alespoň 2 výhody a nevýhody spojené s používáním cizích zdrojů financování podniku.", a: "<b>Výhody:</b> Dostupnost i při nedostatku vlastních prostředků, podnik si zachovává plnou kontrolu, cizí zdroje jsou levnější (daňový štít). <br><b>Nevýhody:</b> Zvyšuje zadluženost, snižuje důvěryhodnost, každý další zdroj je těžší získat, povinnost platit úroky, omezení managementu věřiteli." },
+        { c: "Zdroje financování aktiv", q: "Proč jsou cizí zdroje levnější než vlastní zdroje?", a: "Díky daňové uznatelnosti úroků (daňový štít - úroky snižují základ daně) a vlivu finanční páky." },
+        { c: "Zdroje financování aktiv", q: "Vysvětli princip finanční páky, za jakých podmínek se projeví pozitivní efekt?", a: "Firma využije cizí kapitál ke zvýšení výnosnosti vlastního kapitálu (ROE). Pozitivní efekt se projeví, když je výnosnost aktiv (ROA) vyšší než úroková sazba z cizího kapitálu." },
+        { c: "Zdroje financování aktiv", q: "Vyjmenuje dílčí položky vlastního kapitálu v rozvahovém členění.", a: "Základní kapitál, kapitálové fondy (ážio), fondy ze zisku (např. rezervní fond), HV z minulých let, HV běžného období." },
+        { c: "Zdroje financování aktiv", q: "Proč je vlastní kapitál dražší, i když nedochází ke zdanění příjmů?", a: "Vyšší riziko pro investory (při úpadku jsou uspokojeni jako poslední), nedostatek garance výnosu, náklady obětované příležitosti (implicitní náklady)." },
+        { c: "Zdroje financování aktiv", q: "Vymezte podmínky, za kterých může vést využití cizích zdrojů financování ke zvýšení výnosnosti vlastního kapitálu.", a: "V případě, že výnos z cizího kapitálu bude vyšší než náklady na tento dluh (úroky) – mluvíme o pozitivní finanční páce." },
+        { c: "Zdroje financování aktiv", q: "Popište, v čem spočívá efekt daňového štítu při financování aktiv podniku cizími zdroji.", a: "Úroky z cizího kapitálu jsou považovány za daňově uznatelné náklady. Tím snižují základ daně z příjmu a podnik zaplatí nižší daň." },
+
+        // TYPOLOGIE PODNIKŮ
+        { c: "Typologie podniků", q: "Popište, v čem spočívá podstata a význam klasifikace CZ-NACE.", a: "Klasifikace ekonomických činností. Slouží pro statistické účely a zařazení podniků do odvětví v rámci ČR i EU." },
+        { c: "Typologie podniků", q: "Čím se vyznačují podniky, které náleží do primárního sektoru?", a: "Zaměřují se na prvovýrobu a získávání surovin přímo z přírody – patří sem lesnictví, těžební průmysl a zemědělství." },
+        { c: "Typologie podniků", q: "V čem spočívá rozdíl mezi osobními a kapitálovými společnostmi a jaké právní formy máme v ČR?", a: "<b>Osobní:</b> Společenská smlouva 2+ lidí, ručí celým svým majetkem (v.o.s., k.s.). <br><b>Kapitálové:</b> Zakladatelská smlouva i 1 osoba, ručí do výše nesplaceného vkladu (s.r.o., a.s.)." },
+
+        // VÝROBNÍ KAPACITA
+        { c: "Výrobní kapacita", q: "Co je výrobnost a pracnost?", a: "<b>Výrobnost:</b> Kolik toho vyrobíme za určitý čas. <br><b>Pracnost:</b> Čas, který stroj nebo pracovník potřebuje na výrobu jednoho výrobku." },
+        { c: "Výrobní kapacita", q: "Co je to výrobní kapacita a kapacitní norma výrobnosti?", a: "<b>VK:</b> Maximální množství produkce, které lze vyrobit za daný čas za optimálních podmínek. <br><b>KNV:</b> Množství výrobků, které je stroj schopen vyrobit za jednotku času podle technických norem." },
+        { c: "Výrobní kapacita", q: "Jaký je rozdíl mezi koeficientem využití VK, koeficientem intenzivního využití a koeficientem výkonného využití?", a: "<b>Koef. využití (extenzivní):</b> Jak dlouho zařízení reálně pracuje vs. maximální čas. <br><b>Koef. intenzivního využití:</b> Jaký výkon stroj podává vs. maximální možný výkon. <br><b>Koef. výkonného využití:</b> Součin intenzivního a extenzivního využití." },
+        { c: "Výrobní kapacita", q: "Jak je určována výrobní kapacita podniku při sériovém řazení dílčích výrobních kapacit?", a: "Při sériovém řazení je celková kapacita určena nejslabším článkem (tzv. úzkým hrdlem), tedy strojem s nejnižší kapacitou." },
+
+        // LIKVIDNOST A LIKVIDITA
+        { c: "Likvidnost a likvidita", q: "Definujte pojem likvidnost a likvidita.", a: "<b>Likvidnost:</b> Schopnost majetku přeměnit se na peníze. <br><b>Likvidita:</b> Schopnost podniku splácet včas své finanční závazky." },
+        { c: "Likvidnost a likvidita", q: "Která aktiva dle rozvahového členění jsou nejméně likvidní?", a: "Dlouhodobý majetek (budovy, stroje, pozemky)." },
+        { c: "Likvidnost a likvidita", q: "Která aktiva jsou nejvíce likvidní?", a: "Peněžní prostředky (hotovost, účty)." },
+        { c: "Likvidnost a likvidita", q: "Uveďte, proč je pro podnik výhodné a nevýhodné držet nadměrné množství likvidních aktiv.", a: "<b>Výhoda:</b> Podnik může rychle reagovat na nečekané výdaje. <br><b>Nevýhoda:</b> Peníze nic nevydělávají (nízká rentabilita) a vznikají zbytečně vysoké náklady na skladování/správu." },
+
+        // DLOUHODOBÝ MAJETEK
+        { c: "Dlouhodobý majetek", q: "Lze označit veškerý DM podniku za odepisovaný?", a: "Ne, dlouhodobý majetek se dělí na odepisovaný a neodepisovaný (např. pozemky, umělecká díla, sbírky)." },
+        { c: "Dlouhodobý majetek", q: "Jakou funkci plní daňové odpisy hmotného majetku?", a: "Umožňují legálně snížit základ daně z příjmu, protože se započítávají do nákladů." },
+        { c: "Dlouhodobý majetek", q: "Vysvětlete pojem morální opotřebení dlouhodobého majetku.", a: "Opotřebení vlivem technologického pokroku – stroj zastará, protože existují nové a efektivnější modely, i když je fyzicky stále funkční." },
+        { c: "Dlouhodobý majetek", q: "Uveďte, jaké funkce plní účetní odpisy DM.", a: "<b>Nákladová:</b> Přenos hodnoty majetku do nákladů. <br><b>Střádací:</b> Akumulace prostředků na budoucí obnovu majetku. <br><b>Oceňovací:</b> Umožňují reálné ocenění DM v rozvaze (zůstatková cena)." },
+
+        // ZÁSOBY
+        { c: "Zásoby", q: "Vyjmenuj a popiš metody oceňování zásob materiálu při jeho vyskladnění.", a: "<b>Aritmetický průměr:</b> Celková hodnota zásoby / počet jednotek. <br><b>FIFO:</b> First In First Out (první do skladu, první ze skladu). <br><b>LIFO:</b> Last In First Out (poslední dovnitř, první ven - v ČR zakázáno). <br><b>Pevné ceny:</b> Vyskladňování za předem určenou cenu." },
+        { c: "Zásoby", q: "Vyjmenujte a popište metody oceňování zásob materiálu při pořízení.", a: "<b>Pořizovací cena:</b> Cena nákupu + náklady související (doprava, clo). <br><b>Vlastní náklady:</b> U zásob vlastní výroby (přímý materiál + výroba). <br><b>Reprodukční pořizovací cena:</b> Cena určená odhadcem (u darů, přebytků)." },
+        { c: "Zásoby", q: "Proč je výhodné udržovat zásoby na co nejvyšší nebo nejnižší úrovni?", a: "<b>Nejvyšší:</b> Předchází se nedostatku materiálu, úspory při velkých nákupech a dopravě. <br><b>Nejnižší:</b> Snížení nákladů na skladování, peníze nejsou v zásobách zbytečně 'utopené'." },
+        { c: "Zásoby", q: "Vysvětlete, jak můžete metodou oceňování zásob při vyskladnění ovlivnit svou daňovou povinnost.", a: "V době rostoucích cen (inflace) vede metoda FIFO k nižším nákladům a vyššímu zisku, což znamená <b>vyšší daně</b> než metoda LIFO (pokud by byla povolena)." },
+        { c: "Zásoby", q: "Může podnik použitou metodou oceňování při vyskladnění ovlivnit HV?", a: "Ano, pokud ceny na trhu kolísají, volba metody (např. FIFO vs. Průměr) změní výši nákladů a tím i konečný výsledek hospodaření." },
+
+        // VÝKAZ ZISKU A ZTRÁTY
+        { c: "Výkaz zisku a ztráty", q: "Popište základní strukturu výkazu zisku a ztráty.", a: "Přehled výnosů a nákladů. Člení se na <b>Provozní VH</b> (hlavní činnost) a <b>Finanční VH</b> (úroky, cenné papíry)." },
+        { c: "Výkaz zisku a ztráty", q: "V jakém smyslu je výkaz zisku a ztráty propojen s rozvahou?", a: "Přes položku 'Výsledek hospodaření běžného období'. Zisk/ztráta vypočtená ve VZZ se přenáší do pasiv rozvahy k vlastnímu kapitálu." },
+        { c: "Výkaz zisku a ztráty", q: "Patří do výkazu zisku a ztráty všechny ekonomické náklady?", a: "Ne, chybí tam například implicitní náklady (náklady obětované příležitosti) a náklady příštích období (časové rozlišení)." },
+        { c: "Výkaz zisku a ztráty", q: "V čem se liší pojetí nákladů v manažerském a finančním účetnictví?", a: "<b>Manažerské:</b> Detailní, pro interní rozhodování, sleduje i implicitní náklady. <br><b>Finanční:</b> Standardizované, podle zákonů, pro externí uživatele (stát, banky)." },
+
+        // WACC
+        { c: "WACC", q: "Určete výhodu a nevýhodu financování krátkodobými zdroji ve srovnání s dlouhodobými.", a: "<b>Výhoda:</b> Krátkodobé zdroje jsou obvykle levnější (nižší úrok). <br><b>Nevýhoda:</b> Nutnost častého splácení, riziko platební neschopnosti." },
+        { c: "WACC", q: "Co vyjadřuje WACC?", a: "Weighted Average Cost of Capital – průměrné náklady na celkový kapitál (vlastní i cizí). Udává, kolik firmu průměrně stojí 1 Kč kapitálu." },
+        { c: "WACC", q: "V čem spočívá funkce WACC při hledání optimální kapitálové struktury?", a: "Podnik se snaží najít takový poměr dluhu a vlastních peněz, aby hodnota WACC byla co nejnižší (nejlevnější financování)." },
+
+        // NÁKLADY
+        { c: "Náklady", q: "Jaký je rozdíl mezi fixními a variabilními náklady?", a: "<b>Fixní:</b> Stálé, nemění se s množstvím výroby (nájem). <br><b>Variabilní:</b> Mění se podle toho, kolik se vyrobí (materiál)." },
+        { c: "Náklady", q: "Vysvětlete souvislost mezi přímými a jednicovými náklady.", a: "Každý jednicový náklad je přímý (lze ho přiřadit kusu), ale ne každý přímý náklad je jednicový (např. odpis stroje pro jednu zakázku)." },
+        { c: "Náklady", q: "Definujte pojem implicitní náklady. Za jakým účelem jsou sledovány?", a: "Náklady obětované příležitosti (např. ušlá mzda majitele). Sledují se pro ekonomické rozhodování a hodnocení skutečné efektivnosti (ekonomického zisku)." },
+        { c: "Náklady", q: "Jaký je rozdíl mezi provozními a finančními náklady?", a: "<b>Provozní:</b> Spojené s hlavní činností (mzdy, materiál). <br><b>Finanční:</b> Spojené s penězi a úvěry (úroky, bankovní poplatky)." },
+        { c: "Náklady", q: "Vysvětlete pojem nákladové středisko.", a: "Část firmy (např. IT oddělení), která spotřebovává náklady, ale přímo negeneruje výnosy prodejem." },
+
+        // FINANČNÍ PÁKA
+        { c: "Finanční páka", q: "Vysvětli princip finanční páky. K jakým efektům vede?", a: "Využití dluhu (cizího kapitálu) ke zvýšení rentability vlastního kapitálu. Funguje to díky tomu, že dluh je levnější než očekávaný výnos." },
+        { c: "Finanční páka", q: "Za jakých okolností se pozitivní efekt finanční páky neprojeví?", a: "Když je výnosnost aktiv (ROA) nižší než úroková míra cizího kapitálu. Dluh pak firmu 'vysává' (negativní páka)." },
+
+        // KOEFICIENT BEZPEČNOSTI
+        { c: "Koeficient bezpečnosti", q: "Uveďte, jakou informaci podává koeficient bezpečnosti a jeho hodnotu při nulovém zisku.", a: "Udává, o kolik % mohou klesnout tržby, než se podnik dostane do ztráty. Při nulovém zisku je koeficient 0." },
+
+        // BOD ZVRATU
+        { c: "Bod zvratu", q: "Definuj bod zvratu.", a: "Objem výroby, kdy se celkové tržby rovnají celkovým nákladům (TR = TC) a zisk je přesně nula." },
+        { c: "Bod zvratu", q: "Dosahuje podnik zisku, pokud prodává méně, než je bod zvratu?", a: "Ne, v takovém případě je podnik ve ztrátě, protože tržby nepokryjí fixní náklady." },
+
+        // OBĚŽNÝ MAJETEK
+        { c: "Oběžný majetek", q: "Vyjmenuj jednotlivé položky oběžných aktiv.", a: "Zásoby, pohledávky, peněžní prostředky (hotovost a účty), krátkodobý finanční majetek." },
+        { c: "Oběžný majetek", q: "Která z položek oběžných aktiv je nejméně likvidní a proč?", a: "Zásoby (hlavně nedokončená výroba), protože je nejtěžší je rychle a bez ztráty ceny přeměnit na peníze." },
+
+        // NÁKLADOVÉ KALKULACE
+        { c: "Nákladové kalkulace", q: "Jaký typ kalkulací využívá Rozvrhovou sazbu a k čemu slouží?", a: "Kalkulace úplných nákladů. Slouží k rozpočítání nepřímých (režijních) nákladů na konkrétní výrobky." },
+        { c: "Nákladové kalkulace", q: "Může být hrubé rozpětí nižší než příspěvek na úhradu?", a: "Ne, v takovém případě by tržby nepokryly ani přímé variabilní náklady." },
+        { c: "Nákladové kalkulace", q: "Vysvětlete rozdíl mezi přímými a nepřímými náklady.", a: "<b>Přímé:</b> Lze je přímo přiřadit k výrobku (materiál). <br><b>Nepřímé:</b> Jsou společné pro více výrobků a musí se rozpočítávat (nájem, elektřina)." },
+
+        // ODPISY
+        { c: "Odpisy", q: "Definujte odpisy.", a: "Peněžní vyjádření opotřebení dlouhodobého majetku za určité časové období." },
+        { c: "Odpisy", q: "Uveďte příklad stálých aktiv, která se neodepisují.", a: "Pozemky, umělecká díla, sbírky, zlato." },
+        { c: "Odpisy", q: "Za jakým účelem dochází k účetnímu a daňovému odepisování?", a: "<b>Účetní:</b> Pro reálné zobrazení hodnoty majetku v účetnictví. <br><b>Daňové:</b> Pro snížení základu daně z příjmu (legální daňová úspora)." },
+
+        // ŽIVNOST
+        { c: "Živnost", q: "Jaké jsou obecné podmínky provozování živnosti?", a: "Plná svéprávnost a trestní bezúhonnost." },
+        { c: "Živnost", q: "Rozdělení živností z pohledu odborné způsobilosti.", a: "<b>Ohlašovací:</b> Volné (bez odbornosti), řemeslné a vázané (vyžadují odbornost). <br><b>Koncesované:</b> Vyžadují speciální státní povolení." },
+        { c: "Živnost", q: "Jaká je úloha odpovědného zástupce?", a: "Garantuje odbornou úroveň živnosti u podnikatelů, kteří sami nesplňují podmínku odborné způsobilosti." }
+    ];
+
+    let currentIndex = 0;
+    let isShowingAnswer = false;
+
+    function updateCard() {
+        const item = data[currentIndex];
+        document.getElementById('category').innerText = item.c;
+        document.getElementById('question').innerText = item.q;
+        document.getElementById('answer').innerHTML = item.a;
+        document.getElementById('answer').style.display = 'none';
+        document.getElementById('hint').innerText = "Klikni pro zobrazení odpovědi";
+        document.getElementById('current-num').innerText = currentIndex + 1;
+        document.getElementById('total-num').innerText = data.length;
+        
+        const progressPercent = ((currentIndex + 1) / data.length) * 100;
+        document.getElementById('progress-fill').style.width = progressPercent + "%";
+        
+        isShowingAnswer = false;
+    }
+
+    function toggleAnswer() {
+        const ans = document.getElementById('answer');
+        const hint = document.getElementById('hint');
+        if (!isShowingAnswer) {
+            ans.style.display = 'block';
+            hint.innerText = "Klikni pro skrytí odpovědi";
+            isShowingAnswer = true;
+        } else {
+            ans.style.display = 'none';
+            hint.innerText = "Klikni pro zobrazení odpovědi";
+            isShowingAnswer = false;
+        }
+    }
+
+    function nextCard() {
+        currentIndex = (currentIndex + 1) % data.length;
+        updateCard();
+    }
+
+    function prevCard() {
+        currentIndex = (currentIndex - 1 + data.length) % data.length;
+        updateCard();
+    }
+
+    function shuffleCards() {
+        data.sort(() => Math.random() - 0.5);
+        currentIndex = 0;
+        updateCard();
+    }
+
+    updateCard();
+</script>
+
+</body>
+</html>
